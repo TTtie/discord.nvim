@@ -26,7 +26,7 @@ function! s:check_python3()
 endfunction
 
 function! s:issue_info()
-  call health#report_info('If you are still having problems, create an issue on https://github.com/aurieh/discord.nvim/issues')
+  call health#report_info('If you are still having problems, create an issue on https://github.com/tttie/discord.nvim/issues')
 endfunction
 
 function! health#discord#check()
