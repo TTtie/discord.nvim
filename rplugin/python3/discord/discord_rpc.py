@@ -2,7 +2,6 @@ from contextlib import suppress, contextmanager
 import enum
 import json
 import os
-import socket
 import struct
 import uuid
 
