@@ -3,10 +3,7 @@ from os.path import exists
 
 
 def get_tempdir():
-    return env.get("TMPDIR") or\
-        env.get("TEMPDIR") or\
-        env.get("TMP") or\
-        "/tmp"
+    return env.get("TEMP")
 
 
 class PidLock(object):

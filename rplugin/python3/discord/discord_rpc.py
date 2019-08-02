@@ -11,7 +11,7 @@ import uuid
 def reconnect_on_failure(discord):
     try:
         yield
-    except (socket.error, BrokenPipeError, ConnectionResetError):
+    except OSError:
         discord.reconnect()
 
 
@@ -56,14 +56,11 @@ class Discord(object):
         self.reconnect_threshold = reconnect_threshold
         self.reconnect_counter = 0
 
-        # Sockets
-        self.sock = None
+        # File pointers
+        self.fp = None
 
         # Discord
-        # Stolen from https://github.com/GiovanniMCMXCIX/PyDiscordRPC/blob/master/rpc.py
-        env_vars = ['XDG_RUNTIME_DIR', 'TMPDIR', 'TMP', 'TEMP']
-        path = next((os.environ.get(path, None) for path in env_vars if path in os.environ), '/tmp')
-        self.ipc_path = "{}/discord-ipc-0".format(path)
+        self.ipc_path = "\\\\?\\pipe\\discord-ipc-0"
         self.client_id = client_id
 
     def connect(self, client_id=None):
@@ -72,17 +69,16 @@ class Discord(object):
         except FileNotFoundError:
             raise NoDiscordClientError()
         self.client_id = self.client_id or client_id
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
-            self.sock.connect(self.ipc_path)
-        except (ConnectionAbortedError, ConnectionRefusedError):
+            self.fp = open(self.ipc_path, "r+b")
+        except OSError:
             raise NoDiscordClientError()
         self.handshake()
 
     def disconnect(self):
-        with suppress(socket.error, OSError, BrokenPipeError):
-            self.sock.close()
-        self.sock = None
+        with suppress(OSError):
+            self.fp.close()
+        self.fp = None
 
     def send(self, op, payload):
         if isinstance(op, OP):
@@ -90,7 +86,8 @@ class Discord(object):
         payload = json.dumps(payload).encode("utf8")
         body = struct.pack("<ii", op, len(payload)) + payload
         with reconnect_on_failure(self):
-            return self.sock.sendall(body)
+            self.fp.write(body)
+            self.fp.flush()
         return None
 
     def set_activity(self, activity, pid=os.getpid()):
@@ -107,18 +104,18 @@ class Discord(object):
         assert body["nonce"] == nonce
 
     def shutdown(self):
-        with suppress(socket.error, OSError, BrokenPipeError):
+        with suppress(OSError):
             self.send(OP.CLOSE, {})
         self.disconnect()
 
     def recv(self):
         with reconnect_on_failure(self):
-            return struct.unpack("<ii", self.sock.recv(8))
+            return struct.unpack("<ii", self.fp.read(8))
         return (None, None)
 
     def recv_body(self, length):
         with reconnect_on_failure(self):
-            body = json.loads(self.sock.recv(length).decode("utf8"))
+            body = json.loads(self.fp.read(length).decode("utf8"))
             if body["evt"] == "ERROR":
                 raise DiscordError(body["data"]["message"])
             return body
