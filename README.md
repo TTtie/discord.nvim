@@ -1,3 +1,6 @@
+# Warning
+This is a fork with Windows-specific changes. If you use an UNIX platform, please visit [aurieh/discord.nvim](https://github.com/aurieh/discord.nvim) instead.
+
 # Discord.NVIM
 Discord Rich Presence for Neovim.
 
@@ -6,15 +9,15 @@ Install the plugin using your favorite plugin manager:
 
 [Vundle](https://github.com/VundleVim/Vundle.vim):
 ```
-Plugin 'aurieh/discord.nvim'
+Plugin 'TTtie/discord.nvim'
 ```
 [Plug](https://github.com/junegunn/vim-plug):
 ```
-Plug 'aurieh/discord.nvim', { 'do': ':UpdateRemotePlugins'}
+Plug 'TTtie/discord.nvim', { 'do': ':UpdateRemotePlugins'}
 ```
 [dein](https://github.com/Shougo/dein.vim):
 ```
-call dein#add('aurieh/discord.nvim')
+call dein#add('TTtie/discord.nvim')
 ```
 To finish things off, call `:UpdateRemotePlugins` and restart Neovim.
 
