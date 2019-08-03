@@ -8,22 +8,22 @@ Discord Rich Presence for Neovim.
 Install the plugin using your favorite plugin manager:
 
 [Vundle](https://github.com/VundleVim/Vundle.vim):
-```
+```vim
 Plugin 'TTtie/discord.nvim'
 ```
 [Plug](https://github.com/junegunn/vim-plug):
-```
+```vim
 Plug 'TTtie/discord.nvim', { 'do': ':UpdateRemotePlugins'}
 ```
 > **Warning!**  
-> There is a bug with Git Credential Manager/Plug on Windows that breaks GitHub credentials due to how Plug does its URLs.  
-> To prevent that, add this before initializing Plug into your init.vim:
+> There is an issue with Git Credential Manager/Plug on Windows that breaks GitHub credentials due to Plug's default settings.  
+> To prevent that, use the full repository URL instead:
 > ```vim
-> let g:plug_url_format='https://github.com/%s.git' " The default is https://git::@github.com/%s.git, which breaks GitHub credentials on Windows
+> Plug 'https://github.com/TTtie/discord.nvim.git', { 'do': ':UpdateRemotePlugins'}
 > ```
 
 [dein](https://github.com/Shougo/dein.vim):
-```
+```vim
 call dein#add('TTtie/discord.nvim')
 ```
 To finish things off, call `:UpdateRemotePlugins` and restart Neovim.
