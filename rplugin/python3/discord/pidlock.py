@@ -1,9 +1,14 @@
 from os import environ as env, kill, getpid, remove
 from os.path import exists
-
+from sys import platform
 
 def get_tempdir():
-    return env.get("TEMP")
+    if platform in ("win32", "cygwin"):
+        return env.get("TEMP")
+    return env.get("TMPDIR") or\
+        env.get("TEMPDIR") or\
+        env.get("TMP") or\
+        "/tmp"
 
 
 class PidLock(object):

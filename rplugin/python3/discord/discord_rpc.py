@@ -1,4 +1,6 @@
 from contextlib import suppress, contextmanager
+from sys import platform
+import socket
 import enum
 import json
 import os
@@ -10,7 +12,7 @@ import uuid
 def reconnect_on_failure(discord):
     try:
         yield
-    except OSError:
+    except (OSError, socket.error, BrokenPipeError, ConnectionResetError):
         discord.reconnect()
 
 
@@ -55,11 +57,17 @@ class Discord(object):
         self.reconnect_threshold = reconnect_threshold
         self.reconnect_counter = 0
 
-        # File pointers
-        self.fp = None
+        # Sockets
+        self.socket = None
 
         # Discord
-        self.ipc_path = "\\\\?\\pipe\\discord-ipc-0"
+        if platform in ("win32", "cygwin"):
+            self.ipc_path = "\\\\?\\pipe\\discord-ipc-0"
+        else:
+            # Stolen from https://github.com/GiovanniMCMXCIX/PyDiscordRPC/blob/master/rpc.py
+            env_vars = ['XDG_RUNTIME_DIR', 'TMPDIR', 'TMP', 'TEMP']
+            path = next((os.environ.get(path, None) for path in env_vars if path in os.environ), '/tmp')
+            self.ipc_path = "{}/discord-ipc-0".format(path)
         self.client_id = client_id
 
     def connect(self, client_id=None):
@@ -69,15 +77,19 @@ class Discord(object):
             raise NoDiscordClientError()
         self.client_id = self.client_id or client_id
         try:
-            self.fp = open(self.ipc_path, "r+b")
-        except OSError:
+            if platform in ("win32", "cygwin"):
+                self.socket = open(self.ipc_path, "r+b")
+            else:
+                self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                self.socket.connect(self.ipc_path)
+        except (OSError, ConnectionAbortedError, ConnectionRefusedError):
             raise NoDiscordClientError()
         self.handshake()
 
     def disconnect(self):
-        with suppress(OSError):
-            self.fp.close()
-        self.fp = None
+        with suppress(OSError, socket.error, BrokenPipeError):
+            self.socket.close()
+        self.socket = None
 
     def send(self, op, payload):
         if isinstance(op, OP):
@@ -85,8 +97,11 @@ class Discord(object):
         payload = json.dumps(payload).encode("utf8")
         body = struct.pack("<ii", op, len(payload)) + payload
         with reconnect_on_failure(self):
-            self.fp.write(body)
-            self.fp.flush()
+            if platform in ("win32", "cygwin"):
+                self.fp.write(body)
+                self.fp.flush()
+            else:
+                return self.socket.sendall(body)
         return None
 
     def set_activity(self, activity, pid=os.getpid()):
@@ -109,12 +124,18 @@ class Discord(object):
 
     def recv(self):
         with reconnect_on_failure(self):
-            return struct.unpack("<ii", self.fp.read(8))
+            method = self.socket.recv
+            if platform in ("win32", "cygwin"):
+                method = self.socket.read
+            return struct.unpack("<ii", method(8))
         return (None, None)
 
     def recv_body(self, length):
+        method = self.socket.recv
+        if platform in ("win32", "cygwin"):
+            method = self.socket.read
         with reconnect_on_failure(self):
-            body = json.loads(self.fp.read(length).decode("utf8"))
+            body = json.loads(method(length).decode("utf8"))
             if body["evt"] == "ERROR":
                 raise DiscordError(body["data"]["message"])
             return body
