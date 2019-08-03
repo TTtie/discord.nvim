@@ -15,8 +15,8 @@ Plugin 'TTtie/discord.nvim'
 ```
 Plug 'TTtie/discord.nvim', { 'do': ':UpdateRemotePlugins'}
 ```
-> **Warning!**
-> There is a bug with Git Credential Manager/Plug on Windows that breaks GitHub credentials due to how Plug does its URLs.
+> **Warning!**  
+> There is a bug with Git Credential Manager/Plug on Windows that breaks GitHub credentials due to how Plug does its URLs.  
 > To prevent that, add this before initializing Plug into your init.vim:
 > ```vim
 > let g:plug_url_format='https://github.com/%s.git' " The default is https://git::@github.com/%s.git, which breaks GitHub credentials on Windows
