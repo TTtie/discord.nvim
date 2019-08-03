@@ -124,16 +124,20 @@ class Discord(object):
 
     def recv(self):
         with reconnect_on_failure(self):
-            method = self.socket.recv
+            method = None
             if platform in ("win32", "cygwin"):
                 method = self.socket.read
+            else:
+                method = self.socket.recv
             return struct.unpack("<ii", method(8))
         return (None, None)
 
     def recv_body(self, length):
-        method = self.socket.recv
+        method = None
         if platform in ("win32", "cygwin"):
             method = self.socket.read
+        else: 
+            method = self.socket.recv
         with reconnect_on_failure(self):
             body = json.loads(method(length).decode("utf8"))
             if body["evt"] == "ERROR":
