@@ -98,8 +98,8 @@ class Discord(object):
         body = struct.pack("<ii", op, len(payload)) + payload
         with reconnect_on_failure(self):
             if platform in ("win32", "cygwin"):
-                self.fp.write(body)
-                self.fp.flush()
+                self.socket.write(body)
+                self.socket.flush()
             else:
                 return self.socket.sendall(body)
         return None
