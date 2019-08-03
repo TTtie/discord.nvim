@@ -1,5 +1,5 @@
 # Warning
-This is a fork with Windows-specific changes. If you use an UNIX platform, please visit [aurieh/discord.nvim](https://github.com/aurieh/discord.nvim) instead.
+This is a fork with Windows-specific changes. The Unix backport has not been tested properly, yet.
 
 # Discord.NVIM
 Discord Rich Presence for Neovim.
@@ -21,7 +21,7 @@ call dein#add('TTtie/discord.nvim')
 ```
 To finish things off, call `:UpdateRemotePlugins` and restart Neovim.
 
-# TODO
+# TODO (original)
 - [ ] Multiple clients: wait for lock
 - [X] Rewrite the client in pure python, no cffi
 - [X] Upload some language icons
